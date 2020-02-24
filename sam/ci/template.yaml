@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >-
+  This template sets up CD pipeline for serverless-cognito-auth
+Parameters:
+  GitHubOAuthTokenSecretId:
+    Type: String
+    Description: The AWS Secrets Manager Secret Id that stores Github OAuth token.
+    Default: wolfeidau/GitHubOAuthToken
+  GitHubOwner:
+    Type: String
+    Description: The GitHub owner of the repository.
+    Default: wolfeidau
+  BuildSpecFilePath:
+    Type: String
+    Description: CodeBuild build spec file name for build stage.
+    Default: "buildspec-pipeline.yaml"
+Resources:
+  CD:
+    Type: 'AWS::Serverless::Application'
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:646794253159:applications/aws-sam-codepipeline-cd
+        SemanticVersion: 1.0.0
+      Parameters:
+        GitHubOAuthToken: !Sub '{{resolve:secretsmanager:${GitHubOAuthTokenSecretId}}}'
+        GitHubOwner: !Ref GitHubOwner
+        GitHubRepo: serverless-cognito-auth
+        BuildSpecFilePath: !Ref BuildSpecFilePath
+        PublishToSAR: "true"

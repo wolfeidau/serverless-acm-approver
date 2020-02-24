@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >-
+  This template sets up the acm approver using serverless-acm-approver
+
+Parameters:
+
+  DomainName:
+    Type: String
+  HostedZoneId:
+    Type: String
+  SubjectAlternativeNames:
+    Type: String
+
+Resources:
+  ServerlessCognitoAuth:
+    Type: 'AWS::Serverless::Application'
+    Properties:
+      Location: '../app/acm-approver.yml'
+      Parameters:
+        DomainName: !Ref DomainName
+        HostedZoneId: !Ref HostedZoneId
+        SubjectAlternativeNames: !Ref SubjectAlternativeNames

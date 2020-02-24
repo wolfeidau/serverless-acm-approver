@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'authentication: Resources for hosting authentication using AWS Cognito, a @wolfeidau template'
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: 'ACM Certificate Parameters'
+        Parameters:
+        - DomainName
+        - HostedZoneID
+        - SubjectAlternativeNames
+  'AWS::ServerlessRepo::Application':
+    Name: serverless-acm-approver
+    Description: >-
+      This template deploys a reusable acm verifier custom resource.
+    Author: Mark Wolfe
+    SpdxLicenseId: Apache-2.0
+    Labels: [acm, sam, serverless]
+    HomePageUrl: https://github.com/wolfeidau/serverless-cognito-auth
+    SemanticVersion: 1.0.3
+    SourceCodeUrl: https://github.com/wolfeidau/serverless-cognito-auth/tree/1.0.0
+    LicenseUrl: ../../LICENSE
+    ReadmeUrl: ../../README.md
+
+Parameters:
+
+  DomainName:
+    Type: String
+  HostedZoneId:
+    Type: String
+  SubjectAlternativeNames:
+    Type: String
+
+Resources:
+  ApproverFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: '../../dist/handler.zip'
+      Handler: serverless-acm-approver
+      Runtime: go1.x
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - acm:DescribeCertificate
+                - acm:RequestCertificate
+                - acm:DeleteCertificate
+                - route53:ListHostedZones
+                - route53:ChangeResourceRecordSets
+              Resource: "*"
+      Timeout: 300
+
+  ACMCertificate:
+    Type: "Custom::ACMCertificate"
+    Version: "1.0"
+    Properties:
+      ServiceToken: !Sub "${ApproverFunction.Arn}"
+      DomainName: !Ref DomainName
+      HostedZoneId: !Ref HostedZoneId
+      SubjectAlternativeNames: !Ref SubjectAlternativeNames
+
+Outputs:
+  ApproverFunctionArn:
+    Description: "Approver Function ARN"
+    Value: !GetAtt ApproverFunction.Arn
