@@ -101,6 +101,8 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 		return err
 	}
 
+	log.Info().Str("certificateArn", certificateArn).Msg("waiting for certificate validation")
+
 	err = ac.acm.WaitUntilCertificateValidatedWithContext(ctx, &acm.DescribeCertificateInput{
 		CertificateArn: res.Certificate.CertificateArn,
 	}, request.WithWaiterMaxAttempts(maxAttempts), request.WithWaiterDelay(request.ConstantWaiterDelay(30*time.Second)))
@@ -146,6 +148,8 @@ func (ac *certificateApprover) Request(ctx context.Context, requestID string, do
 }
 
 func (ac *certificateApprover) Delete(ctx context.Context, certificateArn string) error {
+
+	log.Info().Str("certificateArn", certificateArn).Msg("Delete waiting for InUseBy of 0")
 
 	for i := 1; i < maxAttempts; i++ {
 		res, err := ac.acm.DescribeCertificate(&acm.DescribeCertificateInput{
