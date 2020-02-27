@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: >-
-  This template sets up the acm approver using serverless-acm-approver
+  This template sets up the test serverless-acm-approver
 
 Parameters:
 
@@ -24,3 +24,7 @@ Resources:
           !Join
             - ","
             - Ref: SubjectAlternativeNames
+Outputs:
+  CertificateArn:
+    Description: "Certificate ARN"
+    Value: !GetAtt ServerlessACMApprover.Outputs.CertificateArn
