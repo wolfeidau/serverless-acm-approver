@@ -55,9 +55,9 @@ archive:
 .PHONY: archive
 
 package:
-	@echo "--- package cognito stack to aws"
+	@echo "--- package acm-approver stack to aws"
 	@aws cloudformation package \
-		--template-file sam/app/cognito.yml \
+		--template-file sam/app/acm-approver.yml \
 		--s3-bucket $(PACKAGE_BUCKET) \
 		--output-template-file dist/packaged-template.yaml
 .PHONY: package
@@ -71,7 +71,7 @@ packagetest:
 .PHONY: packagetest
 
 deploytest:
-	@echo "--- deploy cognito stack to aws"
+	@echo "--- deploy acm-approver stack to aws"
 	@aws cloudformation deploy \
 		--template-file dist/test-packaged-template.yaml \
 		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
@@ -80,7 +80,7 @@ deploytest:
 .PHONY: deploytest
 
 deployci:
-	@echo "--- deploy cognito stack to aws"
+	@echo "--- deploy acm-approver stack to aws"
 	@aws cloudformation deploy \
 		--template-file sam/ci/template.yaml \
 		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \

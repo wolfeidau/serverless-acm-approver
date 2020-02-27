@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: >-
-  This template sets up CD pipeline for serverless-cognito-auth
+  This template sets up CD pipeline for serverless-acm-approver
 Parameters:
   GitHubOAuthTokenSecretId:
     Type: String
@@ -21,10 +21,10 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:646794253159:applications/aws-sam-codepipeline-cd
-        SemanticVersion: 1.0.0
+        SemanticVersion: 1.1.0
       Parameters:
         GitHubOAuthToken: !Sub '{{resolve:secretsmanager:${GitHubOAuthTokenSecretId}}}'
         GitHubOwner: !Ref GitHubOwner
-        GitHubRepo: serverless-cognito-auth
+        GitHubRepo: serverless-acm-approver
         BuildSpecFilePath: !Ref BuildSpecFilePath
         PublishToSAR: "true"

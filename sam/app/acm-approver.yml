@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: 'authentication: Resources for hosting authentication using AWS Cognito, a @wolfeidau template'
+Description: 'authentication: Resources for an ACM certificate approver, a @wolfeidau template'
 
 Metadata:
   'AWS::CloudFormation::Interface':
