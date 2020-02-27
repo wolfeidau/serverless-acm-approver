@@ -105,6 +105,9 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 	err = ac.acm.WaitUntilCertificateValidatedWithContext(ctx, &acm.DescribeCertificateInput{
 		CertificateArn: res.Certificate.CertificateArn,
 	}, request.WithWaiterMaxAttempts(maxAttempts), request.WithWaiterDelay(request.ConstantWaiterDelay(30*time.Second)))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -123,8 +126,7 @@ func (ac *certificateApprover) Request(ctx context.Context, requestID string, do
 
 	log.Info().Strs("subjectAlternativeNames", subjectAlternativeNames).Str("token", token).Msg("Request Certificate")
 
-	if subjectAlternativeNames != nil &&
-		len(subjectAlternativeNames) > 0 {
+	if len(subjectAlternativeNames) > 0 {
 		input.SubjectAlternativeNames = aws.StringSlice(subjectAlternativeNames)
 	}
 

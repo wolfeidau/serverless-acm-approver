@@ -2,6 +2,7 @@ STAGE ?= dev
 BRANCH ?= master
 APP_NAME ?= serverless-acm-approver
 
+GOLANGCI_VERSION = 1.21.0
 
 default: clean prepare test build archive package deploy
 .PHONY: default
@@ -10,6 +11,12 @@ ci: clean test build archive package deploy
 .PHONY: ci
 
 LDFLAGS := -ldflags="-s -w"
+
+bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
+	@ln -sf golangci-lint-${GOLANGCI_VERSION} bin/golangci-lint
+bin/golangci-lint-${GOLANGCI_VERSION}:
+	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
+	@mv bin/golangci-lint $@
 
 clean:
 	@echo "--- clean all the things"
@@ -22,7 +29,17 @@ prepare:
 	@mkdir -p dist
 .PHONY: prepare
 
-test:
+generate:
+	@echo "--- generate all the things"
+	@go generate ./...
+.PHONY: generate
+
+lint: bin/golangci-lint generate
+	@echo "--- lint all the things"
+	@bin/golangci-lint run
+.PHONY: lint
+
+test: generate
 	@echo "--- test all the things"
 	@go test -v -cover ./...
 .PHONY: test
