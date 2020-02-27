@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/request"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acm/acmiface"
@@ -122,9 +121,10 @@ func (ac *certificateApprover) Request(ctx context.Context, requestID string, do
 		IdempotencyToken: aws.String(token),
 	}
 
-	log.Info().Strs("subjectAlternativeNames", subjectAlternativeNames).Str("token", token).Int("len", len(subjectAlternativeNames)).Msg("Request Certificate")
+	log.Info().Strs("subjectAlternativeNames", subjectAlternativeNames).Str("token", token).Msg("Request Certificate")
 
-	if len(subjectAlternativeNames) > 0 {
+	if subjectAlternativeNames != nil &&
+		len(subjectAlternativeNames) > 0 {
 		input.SubjectAlternativeNames = aws.StringSlice(subjectAlternativeNames)
 	}
 

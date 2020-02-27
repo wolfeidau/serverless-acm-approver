@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      golang: "1.13"
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - make clean build archive package
+  post_build:
+    commands:
+      - echo Build completed on `date`
+cache:
+  paths:
+    - '/go/pkg/mod/**/*'
+artifacts:
+  files:
+    - dist/packaged-template.yaml
+  discard-paths: yes

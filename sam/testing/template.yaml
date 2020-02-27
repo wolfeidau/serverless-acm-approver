@@ -10,14 +10,17 @@ Parameters:
   HostedZoneId:
     Type: String
   SubjectAlternativeNames:
-    Type: String
+    Type: CommaDelimitedList
 
 Resources:
-  ServerlessCognitoAuth:
+  ServerlessACMApprover:
     Type: 'AWS::Serverless::Application'
     Properties:
       Location: '../app/acm-approver.yml'
       Parameters:
         DomainName: !Ref DomainName
         HostedZoneId: !Ref HostedZoneId
-        SubjectAlternativeNames: !Ref SubjectAlternativeNames
+        SubjectAlternativeNames:
+          !Join
+            - ","
+            - Ref: SubjectAlternativeNames
