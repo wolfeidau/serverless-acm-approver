@@ -7,7 +7,7 @@ GOLANGCI_VERSION = 1.21.0
 default: clean prepare test build archive package deploy
 .PHONY: default
 
-ci: clean test build archive package deploy
+ci: clean lint test build archive
 .PHONY: ci
 
 LDFLAGS := -ldflags="-s -w"
