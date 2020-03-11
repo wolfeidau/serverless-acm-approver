@@ -18,6 +18,9 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
 
+bin/go-acc:
+	env GOBIN=$$PWD/bin GO111MODULE=on go install github.com/ory/go-acc
+
 clean:
 	@echo "--- clean all the things"
 	@rm -rf dist
@@ -41,7 +44,7 @@ lint: bin/golangci-lint generate
 
 test: generate
 	@echo "--- test all the things"
-	@go test -v -cover ./...
+	@bin/go-acc --ignore mocks ./... -- -short -v -failfast
 .PHONY: test
 
 build:
