@@ -2,7 +2,7 @@ STAGE ?= dev
 BRANCH ?= master
 APP_NAME ?= serverless-acm-approver
 
-GOLANGCI_VERSION = 1.21.0
+GOLANGCI_VERSION = 1.23.8
 
 default: clean prepare test build archive package deploy
 .PHONY: default
@@ -19,7 +19,7 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 	@mv bin/golangci-lint $@
 
 bin/go-acc:
-	env GOBIN=$$PWD/bin GO111MODULE=on go install github.com/ory/go-acc
+	@env GOBIN=$$PWD/bin GO111MODULE=on go install github.com/ory/go-acc
 
 clean:
 	@echo "--- clean all the things"
@@ -42,7 +42,7 @@ lint: bin/golangci-lint generate
 	@bin/golangci-lint run
 .PHONY: lint
 
-test: generate
+test: generate bin/go-acc
 	@echo "--- test all the things"
 	@bin/go-acc --ignore mocks ./... -- -short -v -failfast
 .PHONY: test
