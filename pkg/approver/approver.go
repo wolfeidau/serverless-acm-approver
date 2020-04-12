@@ -115,7 +115,7 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 func (ac *certificateApprover) Request(ctx context.Context, requestID string, domainName string, subjectAlternativeNames []string, hostedZoneID string) (string, error) {
 
 	// unique hash of cloudformation request id to ensure only one
-	// certficate is created for this CFN request
+	// certificate is created for this CFN request
 	token := fmt.Sprintf("%x", md5.Sum([]byte(requestID)))
 
 	input := &acm.RequestCertificateInput{
@@ -138,13 +138,6 @@ func (ac *certificateApprover) Request(ctx context.Context, requestID string, do
 	certificateArn := aws.StringValue(res.CertificateArn)
 
 	log.Info().Str("arn", certificateArn).Msg("requested certificate")
-
-	err = ac.Approve(ctx, certificateArn, 300, hostedZoneID)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to Approve Certificate")
-	}
-
-	log.Info().Str("arn", certificateArn).Msg("approved certificate")
 
 	return certificateArn, nil
 }

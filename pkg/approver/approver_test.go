@@ -72,17 +72,17 @@ func TestCreate(t *testing.T) {
 		ValidationMethod:        aws.String("DNS"),
 	}).Return(&acm.RequestCertificateOutput{CertificateArn: aws.String("ghi789")}, nil)
 
-	acmapi.EXPECT().DescribeCertificate(&acm.DescribeCertificateInput{CertificateArn: aws.String("ghi789")}).Return(
-		&acm.DescribeCertificateOutput{Certificate: &acm.CertificateDetail{
-			CertificateArn: aws.String("ghi789"),
-			DomainValidationOptions: []*acm.DomainValidation{
-				&acm.DomainValidation{
-					ResourceRecord: &acm.ResourceRecord{Name: aws.String("_a.1.t.co"), Type: aws.String("CNAME"), Value: aws.String("abc")},
-				},
-			}}}, nil)
+	// acmapi.EXPECT().DescribeCertificate(&acm.DescribeCertificateInput{CertificateArn: aws.String("ghi789")}).Return(
+	// 	&acm.DescribeCertificateOutput{Certificate: &acm.CertificateDetail{
+	// 		CertificateArn: aws.String("ghi789"),
+	// 		DomainValidationOptions: []*acm.DomainValidation{
+	// 			&acm.DomainValidation{
+	// 				ResourceRecord: &acm.ResourceRecord{Name: aws.String("_a.1.t.co"), Type: aws.String("CNAME"), Value: aws.String("abc")},
+	// 			},
+	// 		}}}, nil)
 
-	route53api.EXPECT().ChangeResourceRecordSets(gomock.Any()).Return(&route53.ChangeResourceRecordSetsOutput{}, nil)
-	acmapi.EXPECT().WaitUntilCertificateValidatedWithContext(gomock.Any(), &acm.DescribeCertificateInput{CertificateArn: aws.String("ghi789")}, gomock.Any(), gomock.Any()).Return(nil)
+	// route53api.EXPECT().ChangeResourceRecordSets(gomock.Any()).Return(&route53.ChangeResourceRecordSetsOutput{}, nil)
+	// acmapi.EXPECT().WaitUntilCertificateValidatedWithContext(gomock.Any(), &acm.DescribeCertificateInput{CertificateArn: aws.String("ghi789")}, gomock.Any(), gomock.Any()).Return(nil)
 
 	ca := certificateApprover{acm: acmapi, route53: route53api}
 
