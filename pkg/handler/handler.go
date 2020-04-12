@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-lambda-go/cfn"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"github.com/wolfeidau/serverless-acm-approver/pkg/approver"
@@ -18,9 +19,9 @@ type Dispatcher struct {
 }
 
 // New create a new dispatcher of handlers
-func New(certApprover approver.Certificate) *Dispatcher {
+func New(config ...*aws.Config) *Dispatcher {
 	return &Dispatcher{
-		certApprover: certApprover,
+		certApprover: approver.New(config...),
 	}
 }
 
@@ -30,6 +31,7 @@ type Params struct {
 	HostedZoneId            string
 	ServiceToken            string
 	SubjectAlternativeNames []string
+	Region                  string
 }
 
 // Validate checks the params are valid
@@ -84,6 +86,15 @@ func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event 
 		return event.PhysicalResourceID, data, err
 	}
 
+	// using the default cert approver to ensure we can test this method
+	certApprover := ds.certApprover
+
+	// if a region is passed in then override the client to use it, this is primarily to support
+	// targeting us-east-1 for ACM certificates used by cloudfront
+	if params.Region != "" {
+		certApprover = approver.New(aws.NewConfig().WithRegion(params.Region))
+	}
+
 	switch event.RequestType {
 	case cfn.RequestDelete:
 		err := ds.certApprover.Delete(ctx, event.PhysicalResourceID)
@@ -93,12 +104,12 @@ func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event 
 
 		return event.PhysicalResourceID, data, nil
 	case cfn.RequestCreate:
-		certificateARN, err := ds.certApprover.Request(ctx, event.RequestID, params.DomainName, params.SubjectAlternativeNames, params.HostedZoneId)
+		certificateARN, err := certApprover.Request(ctx, event.RequestID, params.DomainName, params.SubjectAlternativeNames, params.HostedZoneId)
 		if err != nil {
 			return "", data, err
 		}
 
-		err = ds.certApprover.Approve(ctx, certificateARN, 300, params.HostedZoneId)
+		err = certApprover.Approve(ctx, certificateARN, 300, params.HostedZoneId)
 		if err != nil {
 			return certificateARN, data, err
 		}

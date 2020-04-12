@@ -38,7 +38,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:170889777468:applications/serverless-acm-approver
-        SemanticVersion: 1.0.1
+        SemanticVersion: 1.1.0
       Parameters:
         DomainName: !Ref DomainName
         HostedZoneId: !Ref HostedZoneId
@@ -46,6 +46,8 @@ Resources:
           !Join
             - ","
             - Ref: SubjectAlternativeNames
+       # Optional region to enable creation of ACM certificates in us-east-1 for cloudfront...
+       # Region: us-east-1 
 
 Outputs:
   CertificateArn:
