@@ -11,6 +11,7 @@ Metadata:
         - DomainName
         - HostedZoneId
         - SubjectAlternativeNames
+        - Region
   'AWS::ServerlessRepo::Application':
     Name: serverless-acm-approver
     Description: >-
@@ -19,7 +20,7 @@ Metadata:
     SpdxLicenseId: Apache-2.0
     Labels: [acm, sam, serverless]
     HomePageUrl: https://github.com/wolfeidau/serverless-acm-approver
-    SemanticVersion: 1.1.0
+    SemanticVersion: 1.1.1
     SourceCodeUrl: https://github.com/wolfeidau/serverless-acm-approver/tree/1.0.0
     LicenseUrl: ../../LICENSE
     ReadmeUrl: ../../README.md
@@ -32,6 +33,10 @@ Parameters:
     Type: String
   SubjectAlternativeNames:
     Type: CommaDelimitedList
+    Default: ""
+  Region: 
+    Type: String
+    Description: "optional region which is used specifically to create certificates in us-east-1 for cloudfront."
     Default: ""
 
 Resources:
@@ -62,6 +67,7 @@ Resources:
       DomainName: !Ref DomainName
       HostedZoneId: !Ref HostedZoneId
       SubjectAlternativeNames: !Ref SubjectAlternativeNames
+      Region: !Ref Region
 
 Outputs:
   ApproverFunctionArn:
