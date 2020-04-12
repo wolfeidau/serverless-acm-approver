@@ -98,6 +98,11 @@ func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event 
 			return "", data, err
 		}
 
+		err = ds.certApprover.Approve(ctx, certificateARN, 300, params.HostedZoneId)
+		if err != nil {
+			return certificateARN, data, err
+		}
+
 		return certificateARN, data, nil
 	default:
 		log.Warn().Str("RequestType", string(event.RequestType)).Str("RequestID", event.RequestID).Msg("no handler for event")

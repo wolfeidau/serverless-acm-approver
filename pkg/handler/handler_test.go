@@ -3,9 +3,12 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/cfn"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/golang/mock/gomock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/require"
@@ -128,6 +131,7 @@ func TestCertRequestCreate(t *testing.T) {
 	cert := mocks.NewMockCertificate(ctrl)
 
 	cert.EXPECT().Request(gomock.Any(), "abc123", "t.1.co", []string{}, "QA8Q").Return("ghi789", nil)
+	cert.EXPECT().Approve(gomock.Any(), "ghi789", gomock.Any(), "QA8Q").Return(nil)
 
 	dispatcher := &Dispatcher{certApprover: cert}
 
@@ -147,6 +151,35 @@ func TestCertRequestCreate(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("ghi789", physicalID)
 	assert.NotNil(data)
+}
+
+func TestCertRequestCreate_ApproveError(t *testing.T) {
+	assert := require.New(t)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cert := mocks.NewMockCertificate(ctrl)
+
+	cert.EXPECT().Request(gomock.Any(), "abc123", "t.1.co", []string{}, "QA8Q").Return("ghi789", nil)
+	cert.EXPECT().Approve(gomock.Any(), "ghi789", gomock.Any(), "QA8Q").Return(awserr.New(request.WaiterResourceNotReadyErrorCode, "failed", errors.New("something broke")))
+
+	dispatcher := &Dispatcher{certApprover: cert}
+
+	event := cfn.Event{
+		RequestID:          "abc123",
+		PhysicalResourceID: "cde456",
+		RequestType:        cfn.RequestCreate,
+		ResourceProperties: map[string]interface{}{
+			"DomainName":              "t.1.co",
+			"HostedZoneId":            "QA8Q",
+			"ServiceToken":            "arn",
+			"SubjectAlternativeNames": []string{""},
+		},
+	}
+
+	_, _, err := dispatcher.CreateAndApproveACMCertificate(context.TODO(), event)
+	assert.Error(err)
 }
 
 func TestCertRequestDelete(t *testing.T) {
