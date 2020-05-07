@@ -103,7 +103,7 @@ func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event 
 		}
 
 		return event.PhysicalResourceID, data, nil
-	case cfn.RequestCreate:
+	case cfn.RequestCreate, cfn.RequestUpdate:
 		certificateARN, err := certApprover.Request(ctx, event.RequestID, params.DomainName, params.SubjectAlternativeNames, params.HostedZoneId)
 		if err != nil {
 			return "", data, err

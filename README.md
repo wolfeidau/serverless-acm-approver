@@ -38,7 +38,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:170889777468:applications/serverless-acm-approver
-        SemanticVersion: 1.1.0
+        SemanticVersion: 1.2.0
       Parameters:
         DomainName: !Ref DomainName
         HostedZoneId: !Ref HostedZoneId

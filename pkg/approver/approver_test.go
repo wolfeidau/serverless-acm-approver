@@ -42,7 +42,7 @@ func TestApprove(t *testing.T) {
 		&acm.DescribeCertificateOutput{Certificate: &acm.CertificateDetail{
 			CertificateArn: aws.String("ghi789"),
 			DomainValidationOptions: []*acm.DomainValidation{
-				&acm.DomainValidation{
+				{
 					ResourceRecord: &acm.ResourceRecord{Name: aws.String("_a.1.t.co"), Type: aws.String("CNAME"), Value: aws.String("abc")},
 				},
 			}}}, nil)

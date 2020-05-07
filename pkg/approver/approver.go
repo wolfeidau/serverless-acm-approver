@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	maxAttempts = 10
+	maxAttempts = 20
 )
 
 // Certificate AWS ACM approver
@@ -73,31 +73,34 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 		time.Sleep(5 * time.Second)
 	}
 
-	record := res.Certificate.DomainValidationOptions[0].ResourceRecord
+	for _, validation := range res.Certificate.DomainValidationOptions {
 
-	log.Info().Msgf("Upserting DNS record into zone %s: %s %s %s",
-		hostedZoneID, aws.StringValue(record.Name), aws.StringValue(record.Type), aws.StringValue(record.Value))
+		record := validation.ResourceRecord
 
-	_, err = ac.route53.ChangeResourceRecordSets(&route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String(hostedZoneID),
-		ChangeBatch: &route53.ChangeBatch{Changes: []*route53.Change{
-			{
-				Action: aws.String(route53.ChangeActionUpsert),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: record.Name,
-					Type: record.Type,
-					TTL:  aws.Int64(60),
-					ResourceRecords: []*route53.ResourceRecord{
-						{
-							Value: record.Value,
+		log.Info().Msgf("Upserting DNS record into zone %s: %s %s %s",
+			hostedZoneID, aws.StringValue(record.Name), aws.StringValue(record.Type), aws.StringValue(record.Value))
+
+		_, err = ac.route53.ChangeResourceRecordSets(&route53.ChangeResourceRecordSetsInput{
+			HostedZoneId: aws.String(hostedZoneID),
+			ChangeBatch: &route53.ChangeBatch{Changes: []*route53.Change{
+				{
+					Action: aws.String(route53.ChangeActionUpsert),
+					ResourceRecordSet: &route53.ResourceRecordSet{
+						Name: record.Name,
+						Type: record.Type,
+						TTL:  aws.Int64(60),
+						ResourceRecords: []*route53.ResourceRecord{
+							{
+								Value: record.Value,
+							},
 						},
 					},
 				},
-			},
-		}},
-	})
-	if err != nil {
-		return err
+			}},
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Info().Str("certificateArn", certificateArn).Msg("waiting for certificate validation")
