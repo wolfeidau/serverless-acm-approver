@@ -2,7 +2,7 @@ STAGE ?= dev
 BRANCH ?= master
 APP_NAME ?= serverless-acm-approver
 
-GOLANGCI_VERSION = 1.23.8
+GOLANGCI_VERSION = 1.26.0
 
 default: clean prepare test build archive package deploy
 .PHONY: default

@@ -40,14 +40,16 @@ Resources:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:170889777468:applications/serverless-acm-approver
         SemanticVersion: 1.2.0
       Parameters:
+        #  DomainName (FQDN) is limited to 64 characters in total
         DomainName: !Ref DomainName
         HostedZoneId: !Ref HostedZoneId
+        # Each Subject Alternative Names (SAN) can be up to 253 characters long
         SubjectAlternativeNames:
           !Join
             - ","
             - Ref: SubjectAlternativeNames
-       # Optional region to enable creation of ACM certificates in us-east-1 for cloudfront...
-       # Region: us-east-1 
+        # Optional region to enable creation of ACM certificates in us-east-1 for cloudfront...
+        # Region: us-east-1 
 
 Outputs:
   CertificateArn:
