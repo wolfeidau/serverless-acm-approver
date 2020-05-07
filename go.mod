@@ -9,6 +9,7 @@ require (
 	github.com/golang/mock v1.4.3
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/ory/go-acc v0.2.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.18.0
 	github.com/stretchr/testify v1.5.1

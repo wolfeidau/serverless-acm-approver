@@ -34,17 +34,17 @@ func (m *MockCertificate) EXPECT() *MockCertificateMockRecorder {
 }
 
 // Approve mocks base method
-func (m *MockCertificate) Approve(arg0 context.Context, arg1 string, arg2 int64, arg3 string) error {
+func (m *MockCertificate) Approve(arg0 context.Context, arg1, arg2 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Approve", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Approve", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Approve indicates an expected call of Approve
-func (mr *MockCertificateMockRecorder) Approve(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockCertificateMockRecorder) Approve(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Approve", reflect.TypeOf((*MockCertificate)(nil).Approve), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Approve", reflect.TypeOf((*MockCertificate)(nil).Approve), arg0, arg1, arg2)
 }
 
 // Delete mocks base method
@@ -62,16 +62,16 @@ func (mr *MockCertificateMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // Request mocks base method
-func (m *MockCertificate) Request(arg0 context.Context, arg1, arg2 string, arg3 []string, arg4 string) (string, error) {
+func (m *MockCertificate) Request(arg0 context.Context, arg1, arg2 string, arg3 []string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Request", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "Request", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Request indicates an expected call of Request
-func (mr *MockCertificateMockRecorder) Request(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockCertificateMockRecorder) Request(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Request", reflect.TypeOf((*MockCertificate)(nil).Request), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Request", reflect.TypeOf((*MockCertificate)(nil).Request), arg0, arg1, arg2, arg3)
 }
