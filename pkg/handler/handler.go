@@ -10,7 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
+
 	"github.com/wolfeidau/serverless-acm-approver/pkg/approver"
+)
+
+const (
+	maxDomainNameLength = 64
 )
 
 // Dispatcher dispatches handler requests and holds approver helper
@@ -40,7 +45,7 @@ func (p *Params) Validate() error {
 		return errors.New("missing required DomainName")
 	}
 
-	if len(p.DomainName) > 64 {
+	if len(p.DomainName) > maxDomainNameLength {
 		return errors.New("length of DomainName exceeds limit if 64 characters")
 	}
 
@@ -71,7 +76,6 @@ func (p *Params) Validate() error {
 
 // CreateAndApproveACMCertificate custom cfn certificate creation function
 func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event cfn.Event) (string, map[string]interface{}, error) {
-
 	jsonData, _ := json.Marshal(&event.ResourceProperties)
 
 	fmt.Println(string(jsonData))
@@ -108,12 +112,12 @@ func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event 
 
 		return event.PhysicalResourceID, data, nil
 	case cfn.RequestCreate, cfn.RequestUpdate:
-		certificateARN, err := certApprover.Request(ctx, event.RequestID, params.DomainName, params.SubjectAlternativeNames, params.HostedZoneId)
+		certificateARN, err := certApprover.Request(ctx, event.RequestID, params.DomainName, params.SubjectAlternativeNames)
 		if err != nil {
 			return "", data, err
 		}
 
-		err = certApprover.Approve(ctx, certificateARN, 300, params.HostedZoneId)
+		err = certApprover.Approve(ctx, certificateARN, params.HostedZoneId)
 		if err != nil {
 			return certificateARN, data, err
 		}
@@ -123,5 +127,4 @@ func (ds *Dispatcher) CreateAndApproveACMCertificate(ctx context.Context, event 
 		log.Warn().Str("RequestType", string(event.RequestType)).Str("RequestID", event.RequestID).Msg("no handler for event")
 		return event.PhysicalResourceID, data, nil
 	}
-
 }

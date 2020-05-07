@@ -2,7 +2,7 @@ package approver
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -18,13 +18,17 @@ import (
 )
 
 const (
-	maxAttempts = 20
+	maxAttempts          = 20
+	recordTTLSeconds     = 60
+	describePollWaitTime = 5 * time.Second
+	validationPollTime   = 30 * time.Second
+	deletionPollTime     = 30 * time.Second
 )
 
 // Certificate AWS ACM approver
 type Certificate interface {
-	Approve(ctx context.Context, certificateArn string, timeout int64, hostedZoneID string) error
-	Request(ctx context.Context, requestID string, domainName string, subjectAlternativeNames []string, hostedZoneID string) (string, error)
+	Approve(ctx context.Context, certificateArn string, hostedZoneID string) error
+	Request(ctx context.Context, requestID string, domainName string, subjectAlternativeNames []string) (string, error)
 	Delete(ctx context.Context, certificateArn string) error
 }
 
@@ -36,7 +40,6 @@ type certificateApprover struct {
 
 // New creates a new approver
 func New(config ...*aws.Config) Certificate {
-
 	sess := session.Must(session.NewSession(config...))
 
 	return &certificateApprover{
@@ -45,18 +48,16 @@ func New(config ...*aws.Config) Certificate {
 	}
 }
 
-func (ac *certificateApprover) Approve(ctx context.Context, certificateArn string, timeout int64, hostedZoneID string) error {
-
+func (ac *certificateApprover) Approve(ctx context.Context, certificateArn string, hostedZoneID string) error {
 	var (
 		err error
 		res *acm.DescribeCertificateOutput
 	)
 
 	for i := 1; i < maxAttempts; i++ {
-
 		log.Info().Str("certificateArn", certificateArn).Msg("describe certificate")
 
-		res, err = ac.acm.DescribeCertificate(&acm.DescribeCertificateInput{
+		res, err = ac.acm.DescribeCertificateWithContext(ctx, &acm.DescribeCertificateInput{
 			CertificateArn: aws.String(certificateArn),
 		})
 		if err != nil {
@@ -70,17 +71,16 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 			}
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(describePollWaitTime)
 	}
 
 	for _, validation := range res.Certificate.DomainValidationOptions {
-
 		record := validation.ResourceRecord
 
 		log.Info().Msgf("Upserting DNS record into zone %s: %s %s %s",
 			hostedZoneID, aws.StringValue(record.Name), aws.StringValue(record.Type), aws.StringValue(record.Value))
 
-		_, err = ac.route53.ChangeResourceRecordSets(&route53.ChangeResourceRecordSetsInput{
+		_, err = ac.route53.ChangeResourceRecordSetsWithContext(ctx, &route53.ChangeResourceRecordSetsInput{
 			HostedZoneId: aws.String(hostedZoneID),
 			ChangeBatch: &route53.ChangeBatch{Changes: []*route53.Change{
 				{
@@ -88,7 +88,7 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 					ResourceRecordSet: &route53.ResourceRecordSet{
 						Name: record.Name,
 						Type: record.Type,
-						TTL:  aws.Int64(60),
+						TTL:  aws.Int64(recordTTLSeconds),
 						ResourceRecords: []*route53.ResourceRecord{
 							{
 								Value: record.Value,
@@ -107,7 +107,7 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 
 	err = ac.acm.WaitUntilCertificateValidatedWithContext(ctx, &acm.DescribeCertificateInput{
 		CertificateArn: res.Certificate.CertificateArn,
-	}, request.WithWaiterMaxAttempts(maxAttempts), request.WithWaiterDelay(request.ConstantWaiterDelay(30*time.Second)))
+	}, request.WithWaiterMaxAttempts(maxAttempts), request.WithWaiterDelay(request.ConstantWaiterDelay(validationPollTime)))
 	if err != nil {
 		return err
 	}
@@ -115,11 +115,10 @@ func (ac *certificateApprover) Approve(ctx context.Context, certificateArn strin
 	return nil
 }
 
-func (ac *certificateApprover) Request(ctx context.Context, requestID string, domainName string, subjectAlternativeNames []string, hostedZoneID string) (string, error) {
-
+func (ac *certificateApprover) Request(ctx context.Context, requestID, domainName string, subjectAlternativeNames []string) (string, error) {
 	// unique hash of cloudformation request id to ensure only one
 	// certificate is created for this CFN request
-	token := fmt.Sprintf("%x", md5.Sum([]byte(requestID)))
+	token := sum(requestID)
 
 	input := &acm.RequestCertificateInput{
 		DomainName:       aws.String(domainName),
@@ -133,7 +132,7 @@ func (ac *certificateApprover) Request(ctx context.Context, requestID string, do
 		input.SubjectAlternativeNames = aws.StringSlice(subjectAlternativeNames)
 	}
 
-	res, err := ac.acm.RequestCertificate(input)
+	res, err := ac.acm.RequestCertificateWithContext(ctx, input)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to Request Certificate")
 	}
@@ -146,11 +145,10 @@ func (ac *certificateApprover) Request(ctx context.Context, requestID string, do
 }
 
 func (ac *certificateApprover) Delete(ctx context.Context, certificateArn string) error {
-
 	log.Info().Str("certificateArn", certificateArn).Msg("Delete waiting for InUseBy of 0")
 
 	for i := 1; i < maxAttempts; i++ {
-		res, err := ac.acm.DescribeCertificate(&acm.DescribeCertificateInput{
+		res, err := ac.acm.DescribeCertificateWithContext(ctx, &acm.DescribeCertificateInput{
 			CertificateArn: aws.String(certificateArn),
 		})
 		if err != nil {
@@ -162,17 +160,21 @@ func (ac *certificateApprover) Delete(ctx context.Context, certificateArn string
 			break
 		}
 
-		time.Sleep(30 * time.Second)
-
+		time.Sleep(deletionPollTime)
 	}
 
 	log.Info().Str("certificateArn", certificateArn).Msg("deleting certificate")
 
-	_, err := ac.acm.DeleteCertificate(&acm.DeleteCertificateInput{
+	_, err := ac.acm.DeleteCertificateWithContext(ctx, &acm.DeleteCertificateInput{
 		CertificateArn: aws.String(certificateArn)})
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func sum(requestID string) string {
+	data := sha256.Sum224([]byte(requestID))
+	return fmt.Sprintf("%x", data[:16])
 }

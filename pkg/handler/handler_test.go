@@ -12,6 +12,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/require"
+
 	"github.com/wolfeidau/serverless-acm-approver/mocks"
 )
 
@@ -38,7 +39,6 @@ func TestDecodeJSON(t *testing.T) {
 	assert.NoError(err)
 
 	assert.Equal(&Params{DomainName: "t.1.co", HostedZoneId: "QA8Q", ServiceToken: "arn", SubjectAlternativeNames: []string{""}}, params)
-
 }
 
 func TestValidate(t *testing.T) {
@@ -130,8 +130,8 @@ func TestCertRequestCreate(t *testing.T) {
 
 	cert := mocks.NewMockCertificate(ctrl)
 
-	cert.EXPECT().Request(gomock.Any(), "abc123", "t.1.co", []string{}, "QA8Q").Return("ghi789", nil)
-	cert.EXPECT().Approve(gomock.Any(), "ghi789", gomock.Any(), "QA8Q").Return(nil)
+	cert.EXPECT().Request(gomock.Any(), "abc123", "t.1.co", []string{}).Return("ghi789", nil)
+	cert.EXPECT().Approve(gomock.Any(), "ghi789", gomock.Any()).Return(nil)
 
 	dispatcher := &Dispatcher{certApprover: cert}
 
@@ -161,8 +161,8 @@ func TestCertRequestCreate_ApproveError(t *testing.T) {
 
 	cert := mocks.NewMockCertificate(ctrl)
 
-	cert.EXPECT().Request(gomock.Any(), "abc123", "t.1.co", []string{}, "QA8Q").Return("ghi789", nil)
-	cert.EXPECT().Approve(gomock.Any(), "ghi789", gomock.Any(), "QA8Q").Return(awserr.New(request.WaiterResourceNotReadyErrorCode, "failed", errors.New("something broke")))
+	cert.EXPECT().Request(gomock.Any(), "abc123", "t.1.co", []string{}).Return("ghi789", nil)
+	cert.EXPECT().Approve(gomock.Any(), "ghi789", gomock.Any()).Return(awserr.New(request.WaiterResourceNotReadyErrorCode, "failed", errors.New("something broke")))
 
 	dispatcher := &Dispatcher{certApprover: cert}
 

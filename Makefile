@@ -42,6 +42,11 @@ lint: bin/golangci-lint generate
 	@bin/golangci-lint run
 .PHONY: lint
 
+lint-fix: bin/golangci-lint generate
+	@echo "--- lint all the things"
+	@bin/golangci-lint run --fix
+.PHONY: lint-fix
+
 test: generate bin/go-acc
 	@echo "--- test all the things"
 	@bin/go-acc --ignore mocks ./... -- -short -v -failfast
