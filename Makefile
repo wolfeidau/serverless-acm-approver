@@ -79,7 +79,7 @@ deploytest:
 		--template-file dist/test-packaged-template.yaml \
 		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--stack-name $(APP_NAME)-$(STAGE)-$(BRANCH) \
-		--parameter-overrides DomainName=$(DOMAIN_NAME) HostedZoneId=$(HOSTED_ZONE_ID) SubjectAlternativeNames=""
+		--parameter-overrides DomainName=$(DOMAIN_NAME) HostedZoneId=$(HOSTED_ZONE_ID) SubjectAlternativeNames=$(SUBJECT_ALTERNATIVE_NAMES)
 .PHONY: deploytest
 
 deployci:
