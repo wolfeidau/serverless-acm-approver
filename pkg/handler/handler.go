@@ -37,19 +37,23 @@ type Params struct {
 // Validate checks the params are valid
 func (p *Params) Validate() error {
 	if p.DomainName == "" {
-		return errors.New("missing required DomainName from Properties")
+		return errors.New("missing required DomainName")
+	}
+
+	if len(p.DomainName) > 64 {
+		return errors.New("length of DomainName exceeds limit if 64 characters")
 	}
 
 	if p.ServiceToken == "" {
-		return errors.New("missing required ServiceToken from Properties")
+		return errors.New("missing required ServiceToken")
 	}
 
 	if p.HostedZoneId == "" {
-		return errors.New("missing required HostedZoneId from Properties")
+		return errors.New("missing required HostedZoneId")
 	}
 
 	if p.SubjectAlternativeNames == nil {
-		return errors.New("missing required SubjectAlternativeNames from Properties")
+		return errors.New("missing required SubjectAlternativeNames")
 	}
 
 	filtered := []string{}
